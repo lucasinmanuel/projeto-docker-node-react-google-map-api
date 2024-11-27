@@ -1,32 +1,38 @@
-import { GoogleApiKey } from "../types/RideTypes"
-
 export interface RideContextProps {
     rideEstimate: RideEstimate | null,
     setRideEstimate: (newValue: RideEstimate | null) => void,
     rideHistory: RideHistory | null,
     setRideHistory: (newValue: RideHistory | null) => void,
-    googleApiKey: GoogleApiKey | null,
-    setGoogleApiKey: (newValue: GoogleApiKey | null) => void,
-    selectedDriver: FormattedDriver | null,
-    setSelectedDriver: (newValue: FormattedDriver | null) => void
+    rideConfirm: RideConfirm | null,
+    setRideConfirm: (newValue: RideConfirm | null) => void
 }
 
 export interface RideEstimate {
-    customer_id?: number,
     origin: {
         latitude: number,
         longitude: number
     },
-    origin_name?: string,
     destination: {
         latitude: number,
         longitude: number,
     },
-    destination_name?: string,
     distance: number,
     duration: string,
     options: Driver[],
     routeResponse: any
+}
+
+export interface RideConfirm {
+    customer_id: string,
+    origin: string,
+    destination: string,
+    distance: number,
+    duration: string,
+    driver: {
+        id: number,
+        name: string
+    },
+    value: number
 }
 
 export interface Driver {
@@ -52,17 +58,27 @@ export interface RideHistory {
     customer_id: string,
     rides: {
         id: number,
-        date: Date,
+        date: string,
         origin: string,
-        destination:
-        string,
+        destination: string,
         distance: number,
-        duration:
-        string,
+        duration: string,
         driver: {
             id: number,
             name: string
         },
         value: number
     }[]
+}
+
+export interface FormattedRideHistory {
+    id: number,
+    date: string,
+    origin: string,
+    destination: string,
+    distance: number,
+    duration: string,
+    driver_id: number,
+    driver_name: string,
+    value: number
 }

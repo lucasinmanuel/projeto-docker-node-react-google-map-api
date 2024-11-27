@@ -9,21 +9,21 @@ import { ZodRideConfirmForm } from '../lib/utils';
 import axios from 'axios';
 import { useRideContext } from '../contexts/RideContext'
 import { useEffect, useState } from 'react'
-import { GoogleMap, Libraries, LoadScript, DirectionsService, DirectionsRenderer } from '@react-google-maps/api'
 import { Link, useNavigate } from 'react-router-dom'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
 import { DriverTable } from '../components/RideConfirm/DriverTable'
 import { TRideConfirm } from '../types/RideTypes'
 
-const googleLibraries: Libraries = ['places'];
-
 function RideConfirmPage() {
-    const [requestError, setRequestError] = useState<boolean>(false);
-    const { googleApiKey, rideEstimate, selectedDriver } = useRideContext();
+    const [requestInvalidData, setRequestInvalidData] = useState<boolean>(false);
+    const [requestDriverNotFound, setRequestDriverNotFound] = useState<boolean>(false);
+    const [requestInvalidDistance, setRequestInvalidDistance] = useState<boolean>(false);
+    const [requestMapError, setMapError] = useState<boolean>(false);
+    const [staticMapUrl, setStaticMapUrl] = useState<string>("");
+    const { setRideEstimate, rideEstimate, setRideConfirm, rideConfirm } = useRideContext();
     const navigate = useNavigate();
     const {
         handleSubmit,
-        register,
         setValue,
         getValues,
         formState: { isSubmitting, errors },
@@ -32,8 +32,9 @@ function RideConfirmPage() {
     });
 
     const handleSubmitRide = async (data: TRideConfirm) => {
-        setRequestError(false)
-
+        setRequestInvalidData(false);
+        setRequestDriverNotFound(false);
+        setRequestInvalidDistance(false);
         axios.patch("http://localhost:8080/ride/confirm", {
             customer_id: data.customer_id,
             origin: data.origin,
@@ -46,45 +47,41 @@ function RideConfirmPage() {
             },
             value: data.value
         })
-            .then((response) => {
-                console.log(response)
+            .then(() => {
+                navigate("/ride/history");
             })
-            .catch(() => setRequestError(true));
+            .catch((e) => {
+                if (e.error_code == "INVALID_DATA") {
+                    setRequestInvalidData(true)
+                } else if (e.error_code == "DRIVER_NOT_FOUND") {
+                    setRequestDriverNotFound(true)
+                } else if (e.error_code == "INVALID_DISTANCE") {
+                    setRequestInvalidDistance(true)
+                }
+            });
     }
 
-    const [originLatLng, setOriginLatLng] = useState<{ lat: number, lng: number }>();
-    const [destinationLatLng, setDestinationLatLng] = useState<{ lat: number, lng: number }>();
-
     useEffect(() => {
-        if (rideEstimate) {
-            setOriginLatLng({
-                lat: rideEstimate?.origin.latitude,
-                lng: rideEstimate?.origin.longitude
-            })
-            setDestinationLatLng({
-                lat: rideEstimate?.destination.latitude,
-                lng: rideEstimate?.destination.longitude
-            })
-            if (rideEstimate.customer_id && rideEstimate.origin_name && rideEstimate.destination_name) {
-                setValue("customer_id", rideEstimate.customer_id);
-                setValue("origin", rideEstimate.origin_name);
-                setValue("destination", rideEstimate.destination_name);
-                setValue("distance", rideEstimate.distance);
-                setValue("duration", rideEstimate.duration);
+        if (rideEstimate && rideConfirm) {
+            if (rideConfirm.customer_id && rideConfirm.origin && rideConfirm.destination) {
+                setValue("customer_id", rideConfirm.customer_id);
+                setValue("origin", rideConfirm.origin);
+                setValue("destination", rideConfirm.destination);
+                setValue("distance", rideConfirm.distance);
+                setValue("duration", rideConfirm.duration);
             }
+            axios.post("http://localhost:8080/static/map", {
+                origin: rideConfirm.origin,
+                destination: rideConfirm.destination
+            })
+                .then((response: any) => {
+                    setStaticMapUrl(response.data);
+                })
+                .catch(() => setMapError(true));
+        } else {
+            navigate("/");
         }
     }, [])
-
-    const [isDirectionsRequested, setIsDirectionsRequested] = useState(false);
-
-    useEffect(() => {
-        if (originLatLng && destinationLatLng && !isDirectionsRequested) {
-            setIsDirectionsRequested(true);
-        }
-    }, [originLatLng, destinationLatLng, isDirectionsRequested]);
-
-    const [directionsResult, setDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
-    const [directionsError, setDirectionsError] = useState<google.maps.DirectionsStatus | null>(null);
 
     return (
         <Card className="w-[900px]">
@@ -92,7 +89,9 @@ function RideConfirmPage() {
                 <CardHeader>
                     <CardTitle>Sua viagem está proxima de acontecer!</CardTitle>
                     <CardDescription>Veja a lista de motoristas disponíveis abaixo: </CardDescription>
-                    {requestError && <h3 className="text-sm text-red-500">Erro na confirmação da viagem (???)</h3>}
+                    {requestInvalidData && <h3 className="text-sm text-red-500">Erro na confirmação da viagem: os dados fornecidos no formulário são inválidos.</h3>}
+                    {requestDriverNotFound && <h3 className="text-sm text-red-500">Erro na confirmação da viagem: o motorista selecionado não foi encontrado.</h3>}
+                    {requestInvalidDistance && <h3 className="text-sm text-red-500">Erro na confirmação da viagem: a distância mínima necessária para o motorista selecionado não foi atendida.</h3>}
                 </CardHeader>
                 <CardContent>
                     <Accordion type="single" collapsible>
@@ -102,15 +101,15 @@ function RideConfirmPage() {
                                 <div className="grid w-full items-center gap-4 mt-4">
                                     <div className="flex flex-col space-y-1.5">
                                         <Label htmlFor="customer_id">ID do cliente</Label>
-                                        <Input disabled={true} type="number" id="customer_id" placeholder="ID do cliente" value={rideEstimate?.customer_id} />
+                                        <Input disabled={true} type="number" id="customer_id" placeholder="ID do cliente" value={rideConfirm?.customer_id} />
                                     </div>
                                     <div className="flex flex-col space-y-1.5">
                                         <Label htmlFor="origin">Origem</Label>
-                                        <Input disabled={true} type="text" id="origin" placeholder="Ponto de origem" value={rideEstimate?.origin_name} />
+                                        <Input disabled={true} type="text" id="origin" placeholder="Ponto de origem" value={rideConfirm?.origin} />
                                     </div>
                                     <div className="flex flex-col space-y-1.5">
                                         <Label htmlFor="destination">Destino</Label>
-                                        <Input disabled={true} type="text" id="destination" placeholder="Ponto de destino" value={rideEstimate?.destination_name} />
+                                        <Input disabled={true} type="text" id="destination" placeholder="Ponto de destino" value={rideConfirm?.destination} />
                                     </div>
                                     <Link to={"/"}><Button variant="outline" className="text-black">Editar</Button></Link>
                                 </div>
@@ -118,33 +117,13 @@ function RideConfirmPage() {
                         </AccordionItem>
                     </Accordion>
                     <div className="flex flex-col space-y-1.5 mt-4">
-                        {directionsError && <span className="text-sm text-red-500">{directionsError}</span>}
-                        {googleApiKey ?
-                            (
-                                <LoadScript googleMapsApiKey={googleApiKey} libraries={googleLibraries}>
-                                    <GoogleMap mapContainerStyle={{ width: '100%', height: '600px' }} center={originLatLng} zoom={19}>
-                                        {
-                                            isDirectionsRequested && (
-                                                <DirectionsService callback={(result, status) => {
-                                                    if (status === "OK" && result) {
-                                                        setDirectionsResult(result);
-                                                    } else {
-                                                        setDirectionsError(status);
-                                                        console.error("Erro ao buscar direções:", status);
-                                                    }
-                                                }
-                                                } options={{
-                                                    origin: destinationLatLng as any,
-                                                    destination: destinationLatLng as any,
-                                                    travelMode: google.maps.TravelMode.DRIVING,
-                                                }} />
-                                            )
-                                        }
-                                        {directionsResult && <DirectionsRenderer directions={directionsResult} />}
-                                    </GoogleMap>
-                                </LoadScript>
-                            ) : <h3 className="text-sm text-red-500">Mapa fora do ar!</h3>
-                        }
+                        <iframe
+                            src={staticMapUrl}
+                            width="100%"
+                            height="600"
+                            style={{ border: 0 }}
+                            loading="lazy">
+                        </iframe>
                     </div>
                     {
                         rideEstimate ? <DriverTable setValue={setValue as UseFormSetValue<TRideConfirm>} /> : <h3 className="text-sm text-red-500 mt-3">Tabela fora do ar!</h3>
@@ -152,7 +131,11 @@ function RideConfirmPage() {
                 </CardContent>
                 {errors.driver_id && <span className="text-sm text-red-500">Selecione um motorista!</span>}
                 <CardFooter className="flex justify-between">
-                    <Button variant="outline">Cancelar</Button>
+                    <Button onClick={() => {
+                        setRideEstimate(null);
+                        setRideConfirm(null);
+                        navigate("/");
+                    }} variant="outline">Cancelar</Button>
                     <Button type="submit" disabled={isSubmitting}>Confirmar</Button>
                 </CardFooter>
             </form>

@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export const ZodRideEstimateForm = z
   .object({
     customer_id: z
-      .number()
+      .string()
       .min(1, { message: 'ID do cliente deve ter ao menos 1 caracteres' }),
     origin: z
       .string()
@@ -26,7 +26,7 @@ export const ZodRideEstimateForm = z
 export const ZodRideConfirmForm = z
   .object({
     customer_id: z
-      .number()
+      .string()
       .min(1, { message: 'ID do cliente deve ter ao menos 1 caractere' }),
     origin: z
       .string()
@@ -53,5 +53,15 @@ export const ZodRideConfirmForm = z
   .refine((data) => data.origin !== data.destination, {
     message: 'O ponto de origem e destino não podem ser iguais!',
     path: ['confirm']
+  });
+
+export const ZodRideHistoryForm = z
+  .object({
+    customer_id: z
+      .string()
+      .min(1, { message: 'ID do cliente deve ter ao menos 1 caractere' }),
+    driver_id: z
+      .string()
+      .min(1, { message: 'ID do motorista deve ter ao menos 1 caractere' })
   });
 

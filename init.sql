@@ -3,10 +3,10 @@ CREATE TABLE drivers (
     nome VARCHAR(255) NOT NULL,
     descricao TEXT,
     carro VARCHAR(255),
-    avaliacao NUMERIC(2, 1) CHECK (avaliacao >= 0 AND avaliacao <= 5),
+    avaliacao NUMERIC CHECK (avaliacao >= 0 AND avaliacao <= 5),
     comentarios TEXT,
-    taxa_km NUMERIC(10, 2),
-    km_minimo NUMERIC(10, 2)
+    taxa_km NUMERIC,
+    km_minimo NUMERIC
 );
 
 INSERT INTO drivers (id, nome, descricao, carro, avaliacao, comentarios, taxa_km, km_minimo) VALUES
@@ -33,3 +33,17 @@ INSERT INTO drivers (id, nome, descricao, carro, avaliacao, comentarios, taxa_km
  'Serviço impecável! O motorista é a própria definição de classe e o carro é simplesmente magnífico. Uma experiência digna de um agente secreto.', 
  10.00, 
  10.00);
+
+CREATE TABLE rides (
+    id SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL,
+    origin TEXT NOT NULL,
+    destination TEXT NOT NULL,
+    distance NUMERIC NOT NULL,
+    duration TEXT NOT NULL,
+    driver_id INT NOT NULL,
+    driver_name TEXT NOT NULL,
+    ride_value NUMERIC NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_driver FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE
+);

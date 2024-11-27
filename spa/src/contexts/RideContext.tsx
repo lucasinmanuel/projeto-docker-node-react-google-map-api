@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { FormattedDriver, RideContextProps, RideEstimate, RideHistory } from '../interfaces/RideInterfaces';
+import { FormattedDriver, RideConfirm, RideContextProps, RideEstimate, RideHistory } from '../interfaces/RideInterfaces';
 import { GoogleApiKey } from '../types/RideTypes';
 
 const RideContext = createContext<RideContextProps | undefined>(undefined);
@@ -9,17 +9,14 @@ interface RideContextProviderProps {
 }
 
 const exampleRideEstimate: RideEstimate = {
-    customer_id: 123,
     origin: {
         latitude: -23.55052,
         longitude: -46.633308,
     },
-    origin_name: "Avenida Paulista, São Paulo, SP",
     destination: {
         latitude: -23.559616,
         longitude: -46.658867,
     },
-    destination_name: "Rua Oscar Freire, São Paulo, SP",
     distance: 2.8, // Distância em km
     duration: "15 minutos",
     options: [
@@ -54,16 +51,14 @@ const exampleRideEstimate: RideEstimate = {
 };
 
 export const RideContextProvider: React.FC<RideContextProviderProps> = ({ children }) => {
-    const [rideEstimate, setRideEstimate] = useState<RideEstimate | null>(exampleRideEstimate);
+    const [rideEstimate, setRideEstimate] = useState<RideEstimate | null>(null);
+    const [rideConfirm, setRideConfirm] = useState<RideConfirm | null>(null);
     const [rideHistory, setRideHistory] = useState<RideHistory | null>(null);
-    const [googleApiKey, setGoogleApiKey] = useState<GoogleApiKey | null>(null);
-    const [selectedDriver, setSelectedDriver] = useState<FormattedDriver | null>(null);
     return (
         <RideContext.Provider value={{
             rideEstimate, setRideEstimate,
             rideHistory, setRideHistory,
-            googleApiKey, setGoogleApiKey,
-            selectedDriver, setSelectedDriver
+            rideConfirm, setRideConfirm
         }}>
             {children}
         </RideContext.Provider>

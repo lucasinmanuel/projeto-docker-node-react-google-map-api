@@ -31,38 +31,111 @@ import {
     TableHeader,
     TableRow,
 } from "../ui/table"
-import { FormattedDriver, RideEstimate } from "../../interfaces/RideInterfaces"
+import { FormattedDriver, FormattedRideHistory, RideEstimate } from "../../interfaces/RideInterfaces"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
-import { DriverFilter, TRideConfirm, TRideEstimate } from "../../types/RideTypes"
+import { DriverFilter, HistoryFilter, TRideConfirm, TRideEstimate } from "../../types/RideTypes"
 import { Checkbox } from "../ui/checkbox"
 import { useRideContext } from "../../contexts/RideContext"
 import { UseFormSetValue } from "react-hook-form"
 
-export const columns: ColumnDef<FormattedDriver>[] = [
+export const columns: ColumnDef<FormattedRideHistory>[] = [
     {
-        id: "select",
-        header: ({ }) => (
-            <Button
-                variant="default"
-            >
-                Selecione
-            </Button>
-        ),
-        cell: ({ row, table }) => (
-            <div className="flex items-center justify-center">
-                <Checkbox
-                    className="bg-white"
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => {
-                        table.setRowSelection({});
-                        row.toggleSelected(!!value);
-                    }}
-                    aria-label="Select row"
-                />
-            </div>
-        ),
-        enableSorting: false,
-        enableHiding: false,
+        accessorKey: "driver_name",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Nome
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => <div>{row.getValue("driver_name")}</div>,
+    },
+    {
+        accessorKey: "date",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Data e hora
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => {
+            const formatter = new Intl.DateTimeFormat('pt-BR', {
+                dateStyle: "short",
+                timeStyle: "short"
+            });
+            const formatted = formatter.format(new Date(row.getValue("date")));
+            return <div>{formatted}</div>
+        }
+    },
+    {
+        accessorKey: "origin",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Origem
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => <div>{row.getValue("origin")}</div>,
+    },
+    {
+        accessorKey: "destination",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Destino
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => <div>{row.getValue("destination")}</div>,
+    },
+    {
+        accessorKey: "distance",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    className="mx-auto"
+                >
+                    Distância
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => <div>{row.getValue("distance")}m</div>,
+    },
+    {
+        accessorKey: "duration",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="default"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Tempo
+                    <ArrowUpDown />
+                </Button>
+            )
+        },
+        cell: ({ row }) => <div>{row.getValue("duration")}</div>,
     },
     {
         accessorKey: "value",
@@ -77,90 +150,19 @@ export const columns: ColumnDef<FormattedDriver>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div>R$ {row.getValue("value")}</div>,
-    },
-    {
-        accessorKey: "name",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="default"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Nome
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("name")}</div>,
-    },
-    {
-        accessorKey: "description",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="default"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Descrição
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("description")}</div>,
-    },
-    {
-        accessorKey: "vehicle",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="default"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    className="mx-auto"
-                >
-                    Veículo
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("vehicle")}</div>,
-    },
-    {
-        accessorKey: "review_rating",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="default"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Avaliação
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("review_rating")}/5</div>,
-    },
-    {
-        accessorKey: "review_comment",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="default"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Comentário
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div>{row.getValue("review_comment")}</div>,
+        cell: ({ row }) => {
+            const formatter = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+            const formatted = formatter.format(row.getValue("value"));
+            return <div>{formatted}</div>
+        }
     }
 ]
 
-export function DriverTable({ setValue }: {
-    setValue: UseFormSetValue<TRideConfirm>
-}) {
-    const { rideEstimate } = useRideContext();
+export function HistoryTable() {
+    const { rideHistory } = useRideContext();
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
@@ -170,28 +172,29 @@ export function DriverTable({ setValue }: {
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
-    const [formattedDrivers, setFormattedDrivers] = React.useState<FormattedDriver[]>([]);
+    const [formattedRideHistory, setFormattedRideHistory] = React.useState<FormattedRideHistory[]>([]);
 
     React.useEffect(() => {
-        if (rideEstimate) {
-            const newDrivers: FormattedDriver[] = rideEstimate.options.map((driver) => {
+        if (rideHistory) {
+            const newDrivers: FormattedRideHistory[] = rideHistory.rides.map((ride) => {
                 return {
-                    description: driver.description,
-                    id: driver.id,
-                    name: driver.name,
-                    review_rating: driver.review.rating,
-                    review_comment: driver.review.comment,
-                    value: driver.value,
-                    vehicle: driver.vehicle
-
+                    id: ride.id,
+                    date: ride.date,
+                    origin: ride.origin,
+                    destination: ride.destination,
+                    distance: ride.distance,
+                    duration: ride.duration,
+                    driver_id: ride.driver.id,
+                    driver_name: ride.driver.name,
+                    value: ride.value
                 }
             });
-            setFormattedDrivers(newDrivers);
+            setFormattedRideHistory(newDrivers);
         }
     }, [])
 
     const table = useReactTable({
-        data: formattedDrivers,
+        data: formattedRideHistory,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -209,24 +212,10 @@ export function DriverTable({ setValue }: {
         },
     })
 
-    React.useEffect(() => {
-        const row = table.getSelectedRowModel().rows[0];
-        if (row) {
-            const driver = row.original;
-            Object.entries(driver).map(([key, value]) => {
-                if (["id", "name"].includes(key)) {
-                    setValue("driver_" + key as any, value);
-                } else if (["value"].includes(key)) {
-                    setValue(key as any, value);
-                }
-            });
-        }
-    }, [rowSelection]);
+    const [tableFilter, setTableFilter] = React.useState<HistoryFilter>("driver_name");
 
-    const [tableFilter, setTableFilter] = React.useState<DriverFilter>("name");
-
-    function formattedCellId(id: DriverFilter) {
-        const ids = { name: "Nome", description: "Descrição", vehicle: "Veículo", review_rating: "Avaliação", review_comment: "Comentário", value: "Valor" }
+    function formattedCellId(id: HistoryFilter) {
+        const ids = { driver_name: "Nome", date: "Data e hora", origin: "Origem", destination: "Destino", distance: "Distância", duration: "Tempo", value: "Valor" }
         return ids[id];
     }
 
@@ -236,7 +225,7 @@ export function DriverTable({ setValue }: {
                 <div className="flex gap-3">
                     <Select onValueChange={(value => {
                         table.setColumnFilters([]);
-                        setTableFilter(value as DriverFilter);
+                        setTableFilter(value as HistoryFilter);
                     })} defaultValue="name">
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Seleciona o filtro" />
@@ -244,12 +233,13 @@ export function DriverTable({ setValue }: {
                         <SelectContent>
                             <SelectGroup>
                                 <SelectLabel>Filtros</SelectLabel>
+                                <SelectItem value="driver_name">Nome do motorista</SelectItem>
+                                <SelectItem value="date">Data e hora</SelectItem>
+                                <SelectItem value="origin">Origem</SelectItem>
+                                <SelectItem value="destination">Destino</SelectItem>
+                                <SelectItem value="distance">Distância</SelectItem>
+                                <SelectItem value="duration">Tempo</SelectItem>
                                 <SelectItem value="value">Valor</SelectItem>
-                                <SelectItem value="name">Nome</SelectItem>
-                                <SelectItem value="description">Descrição</SelectItem>
-                                <SelectItem value="vehicle">Veículo</SelectItem>
-                                <SelectItem value="review_rating">Avaliação</SelectItem>
-                                <SelectItem value="review_comment">Comentário</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -282,7 +272,7 @@ export function DriverTable({ setValue }: {
                                             column.toggleVisibility(!!value)
                                         }
                                     >
-                                        {formattedCellId(column.id as DriverFilter)}
+                                        {formattedCellId(column.id as HistoryFilter)}
                                     </DropdownMenuCheckboxItem>
                                 )
                             })}
