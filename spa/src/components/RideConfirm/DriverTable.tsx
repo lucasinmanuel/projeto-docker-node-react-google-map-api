@@ -31,9 +31,9 @@ import {
     TableHeader,
     TableRow,
 } from "../ui/table"
-import { FormattedDriver, RideEstimate } from "../../interfaces/RideInterfaces"
+import { FormattedDriver } from "../../interfaces/RideInterfaces"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
-import { DriverFilter, TRideConfirm, TRideEstimate } from "../../types/RideTypes"
+import { DriverFilter, TRideConfirm } from "../../types/RideTypes"
 import { Checkbox } from "../ui/checkbox"
 import { useRideContext } from "../../contexts/RideContext"
 import { UseFormSetValue } from "react-hook-form"
@@ -77,7 +77,14 @@ export const columns: ColumnDef<FormattedDriver>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div>R$ {row.getValue("value")}</div>,
+        cell: ({ row }) => {
+            const formatter = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+            const formatted = formatter.format(row.getValue("value"));
+            return <div>{formatted}</div>
+        },
     },
     {
         accessorKey: "name",
@@ -188,7 +195,7 @@ export function DriverTable({ setValue }: {
             });
             setFormattedDrivers(newDrivers);
         }
-    }, [])
+    }, [rideEstimate])
 
     const table = useReactTable({
         data: formattedDrivers,

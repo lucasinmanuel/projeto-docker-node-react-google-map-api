@@ -31,12 +31,10 @@ import {
     TableHeader,
     TableRow,
 } from "../ui/table"
-import { FormattedDriver, FormattedRideHistory, RideEstimate } from "../../interfaces/RideInterfaces"
+import { FormattedRideHistory } from "../../interfaces/RideInterfaces"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
-import { DriverFilter, HistoryFilter, TRideConfirm, TRideEstimate } from "../../types/RideTypes"
-import { Checkbox } from "../ui/checkbox"
+import { HistoryFilter } from "../../types/RideTypes"
 import { useRideContext } from "../../contexts/RideContext"
-import { UseFormSetValue } from "react-hook-form"
 
 export const columns: ColumnDef<FormattedRideHistory>[] = [
     {
@@ -191,7 +189,7 @@ export function HistoryTable() {
             });
             setFormattedRideHistory(newDrivers);
         }
-    }, [])
+    }, [rideHistory])
 
     const table = useReactTable({
         data: formattedRideHistory,
@@ -226,7 +224,7 @@ export function HistoryTable() {
                     <Select onValueChange={(value => {
                         table.setColumnFilters([]);
                         setTableFilter(value as HistoryFilter);
-                    })} defaultValue="name">
+                    })} defaultValue="driver_name">
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Seleciona o filtro" />
                         </SelectTrigger>

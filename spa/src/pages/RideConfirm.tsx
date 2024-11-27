@@ -18,14 +18,13 @@ function RideConfirmPage() {
     const [requestInvalidData, setRequestInvalidData] = useState<boolean>(false);
     const [requestDriverNotFound, setRequestDriverNotFound] = useState<boolean>(false);
     const [requestInvalidDistance, setRequestInvalidDistance] = useState<boolean>(false);
-    const [requestMapError, setMapError] = useState<boolean>(false);
+    const [mapError, setMapError] = useState<boolean>(false);
     const [staticMapUrl, setStaticMapUrl] = useState<string>("");
     const { setRideEstimate, rideEstimate, setRideConfirm, rideConfirm } = useRideContext();
     const navigate = useNavigate();
     const {
         handleSubmit,
         setValue,
-        getValues,
         formState: { isSubmitting, errors },
     } = useForm<TRideConfirm>({
         resolver: zodResolver(ZodRideConfirmForm),
@@ -51,11 +50,12 @@ function RideConfirmPage() {
                 navigate("/ride/history");
             })
             .catch((e) => {
-                if (e.error_code == "INVALID_DATA") {
+                const error_data = e.response.data;
+                if (error_data.error_code == "INVALID_DATA") {
                     setRequestInvalidData(true)
-                } else if (e.error_code == "DRIVER_NOT_FOUND") {
+                } else if (error_data.error_code == "DRIVER_NOT_FOUND") {
                     setRequestDriverNotFound(true)
-                } else if (e.error_code == "INVALID_DISTANCE") {
+                } else if (error_data.error_code == "INVALID_DISTANCE") {
                     setRequestInvalidDistance(true)
                 }
             });

@@ -53,9 +53,10 @@ function RideHistoryPage() {
                 setRideHistory(data);
             })
             .catch((e) => {
-                if (e.error_code == "INVALID_DRIVER") {
+                const error_data = e.response.data;
+                if (error_data.error_code == "INVALID_DRIVER") {
                     setRequestInvalidDriver(true)
-                } else if (e.error_code == "NO_RIDES_FOUND") {
+                } else if (error_data.error_code == "NO_RIDES_FOUND") {
                     setRequestNoRidesFound(true)
                 }
             });
@@ -68,12 +69,13 @@ function RideHistoryPage() {
                     <CardTitle>Veja seu histórico de viagem!</CardTitle>
                     <CardDescription>Com base nas informações da viagem, filtre a lista abaixo:</CardDescription>
                     {requestInvalidDriver && <h3 className="text-sm text-red-500">Erro na busca do histórico: motorista inválido.</h3>}
-                    {requestNoRidesFound && <h3 className="text-sm text-red-500"> Erro na busca do histórico: não há hitórico.</h3>}
+                    {requestNoRidesFound && <h3 className="text-sm text-red-500"> Erro na busca do histórico: não há histórico.</h3>}
                 </CardHeader>
                 <CardContent>
                     <div className="grid w-full items-center gap-4 mt-4">
                         <div className="flex flex-col space-y-1.5">
                             <Label htmlFor="customer_id">ID do cliente</Label>
+                            {errors.customer_id && <span className="text-sm text-red-500">{errors.customer_id?.message}</span>}
                             <Input type="number" id="customer_id" placeholder="ID do cliente" {...register("customer_id")} />
                         </div>
                         <div className="flex flex-col space-y-1.5">
